@@ -1,0 +1,461 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <style>
+            #renderbutton {
+                width: 20%;
+                margin: 10px;
+                padding: 8px;
+                border: none;
+                outline: none;
+                font-size: 16px;
+                right: 40%;
+            }
+
+            #renderbutton:hover {
+                background-color: #ccf;
+            }
+
+            #addnewlight {
+                background-color: #d0d0d0;
+            }
+
+            .codeinput {
+                width: 100%;
+            }
+
+            .collapsible {
+                background-color: #eee;
+                color: #444;
+                cursor: pointer;
+                padding: 18px;
+                width: 100%;
+                border: none;
+                text-align: left;
+                outline: none;
+                font-size: 16px;
+            }
+
+            .active, .collapsible:hover {
+                background-color: #ccf;
+            }
+
+            .content {
+                padding: 18px;
+                max-height: 0;
+                overflow: hidden;
+                transition: max-height 0.1s ease-out;
+                background-color: #f1f1f1;
+            }
+
+            .light {
+                padding: 9px;
+                background-color: #d0d0d0;
+            }
+        </style>
+    </head>
+    <body>
+        <canvas id="myCanvas" width="512" height="512"
+            style="border:1px solid #c3c3c3;">
+            Your browser does not support the canvas element.
+        </canvas>
+        <p>Function: </p>
+        <textarea name="Function" id="checkFunction" class="codeinput">if (position.magnitude() < 5) return true;
+return false; </textarea>
+        <input type="button" id="renderbutton" value="Render" onclick="runNewSettings();" /> <br>
+        
+        <button class="collapsible">Toggle Camera Settings</button>
+        <div class="content">
+            <p> Camera Position: </p>
+            <input type="number" name="cameraX" id="cameraX" value = "10">
+            <input type="number" name="cameraY" id="cameraY" value = "4">
+            <input type="number" name="cameraZ" id="cameraZ" value = "4"> <br>
+
+            <p> Camera Look Position: </p>
+            <input type="number" name="lookX" id="lookX" value = "0">
+            <input type="number" name="lookY" id="lookY" value = "0">
+            <input type="number" name="lookZ" id="lookZ" value = "0"> <br>
+            
+            <p> Camera Resolution: </p>
+            <input type="number" name="resolutionx" id="resolutionx" value = "512">
+            <input type="number" name="resolutiony" id="resolutiony" value = "512"> <br> <br>
+            
+            <p> Advanced Settings </p>
+            <p> Camera Up Direction: </p>
+            <input type="number" name="upX" id="upX" value = "0">
+            <input type="number" name="upY" id="upY" value = "1">
+            <input type="number" name="upZ" id="upZ" value = "0"> <br>
+            
+            <p> Camera Start X, Y: </p>
+            <input type="number" name="startx" id="startx" value = "-1">
+            <input type="number" name="starty" id="starty" value = "-1"> <br>
+            
+            <p> Camera End X, Y: </p>
+            <input type="number" name="endx" id="endx" value = "1">
+            <input type="number" name="endy" id="endy" value = "1"> <br>
+            
+            <p> Camera Distance: </p>
+            <input type="number" name="distance" id="distance" value = "2">
+        </div>
+        
+        <button class="collapsible">Toggle Color Settings</button>
+        <div class="content">
+            <p>Color Fucntion: </p>
+            <textarea name="Function" id="colorFunction" class="codeinput">return new Vector(1, 1, 1);</textarea>
+            <p> Background Color (0 to 1, rbg):</p>
+            <input type="number" name="backgroundr" id="backgroundr" value = "0">
+            <input type="number" name="backgroundg" id="backgroundg" value = "0">
+            <input type="number" name="backgroundb" id="backgroundb" value = "0">
+        </div>
+        
+        <button class="collapsible">Toggle Lighting Settings</button>
+        <div class="content">
+            <p>Shadows:</p>
+            <input type="checkbox" name="shadows" id="shadows">
+            <p>Specular Amount (0 - 1):</p>
+            <input type="number" name="specularamount" id="specularamount" value = "1">
+            <p>Specular Intensity:</p>
+            <input type="number" name="specular" id="specular" value = "16">
+            <p>Reflective Bounces:</p>
+            <input type="number" name="reflectionbounces" id="reflectionbounces" value = "0">
+            <p>Reflection Scale (0 to 1) :</p>
+            <input type="number" name="reflectionamount" id="reflectionamount" value = "0.5">
+            <p>Current Lights in Scene: </p>
+            <div id="lights">
+                <div class="light" id="light0"> Position: 0, 50, 0 Color: 1, 1, 1 
+                <input type="button" value="Remove" onclick="removeLight(0);" />
+                </div>
+            </div>
+            <div id="addnewlight">
+                <p>Add a new light: </p>
+                <p>Position: </p>
+                <input type="number" name="newlightx" id="newlightx" value = "0">
+                <input type="number" name="newlighty" id="newlighty" value = "0">
+                <input type="number" name="newlightz" id="newlightz" value = "0"> <br>
+                <p>Color (0 to 1, rbg):</p>
+                <input type="number" name="newlightr" id="newlightr" value = "1">
+                <input type="number" name="newlightg" id="newlightg" value = "1">
+                <input type="number" name="newlightb" id="newlightb" value = "1"> <br>
+                <input type="button" value="Add" onclick="addLight();" />
+            </div>
+        </div>
+
+        <button class="collapsible">Toggle Marching Settings</button>
+        <div class="content">
+            <p> Ray Length: </p>
+            <input type="number" name="rayLength" id="rayLength" value = "50"> <br>
+            <p> Ray Detail (how many checks per unit): </p>
+            <input type="number" name="rayDetail" id="rayDetail" value = "10"> <br>
+            <p> Binary Search Detail: </p>
+            <input type="number" name="binarySearchDetail" id="binarySearchDetail" value = "0.0000001"> <br>
+            <p> Normal Branch Distance: </p>
+            <input type="number" name="normalBranchDistance" id="normalBranchDistance" value = "0.001"> <br>
+        </div>
+
+        <script>
+            // Rendering Code
+            
+            // Most of the variables are left global on purpose so users can reference them in their function if they'd like.
+            var cameraXStart = -1;
+            var cameraYStart = -1;
+            var cameraXEnd = 1;
+            var cameraYEnd = 1;
+            var cameraDistance = 2;
+            
+            var xResolution = 512;
+            var yResolution = 512;
+            
+            var rayLength = 50;
+            var rayDetail = 10;
+            
+            var binarySearchDetail = 0.0000001;
+            var normalBranchDistance = 0.001;
+            
+            var backgroundColor;
+            
+            var specularAmount = 0;
+            var specular = 16;
+            var bounces = 0;
+            var relfectionStrength = 0.5;
+            var shadows = false;
+            
+            var canvas = document.getElementById("myCanvas");
+            var ctx = canvas.getContext("2d");
+            
+            var checkScript;
+            var colorScript;
+            
+            var cameraPosition;
+            var cameraLook;
+            var cameraUp;
+            
+            var lights = {};
+            var currentLightId = 1;
+            
+            // JavaScript styled like Evan Wallaces because I have a massive code crush on him: http://evanw.github.io/csg.js/docs/
+            
+            Vector = function(x, y, z) {
+                this.x = x;
+                this.y = y;
+                this.z = z;
+            };
+            
+            Vector.prototype = {
+                plus: function(other) {
+                    return new Vector(this.x + other.x, this.y + other.y, this.z + other.z);
+                },
+                
+                minus: function(other) {
+                    return new Vector(this.x - other.x, this.y - other.y, this.z - other.z);
+                },
+                
+                times: function(value) {
+                    return new Vector(this.x * value, this.y * value, this.z * value);
+                },
+                
+                pairwiseTimes: function(other) {
+                    return new Vector(this.x * other.x, this.y * other.y, this.z * other.z);
+                },
+                
+                dividedBy: function(value) {
+                    return new Vector(this.x / value, this.y / value, this.z / value);
+                },
+                
+                dot: function(other) {
+                    return this.x * other.x + this.y * other.y + this.z * other.z;
+                },
+                
+                magnitude: function() {
+                    return Math.sqrt(this.dot(this));
+                },
+                
+                unit: function() {
+                    return this.dividedBy(this.magnitude());
+                },
+                
+                cross: function(other) {
+                    return new Vector(this.y * other.z - this.z * other.y, this.z * other.x - this.x * other.z, this.x * other.y - this.y * other.x);
+                }
+            }
+            
+            Light = function(position, color, element) {
+                this.position = position;
+                this.color = color;
+                this.element = element;
+            }
+            
+            function getNormal(position, direction) {
+                var axis1 = direction.cross(new Vector(0, 1, 0)).unit();
+                var axis2 = direction.cross(axis1).unit();
+                
+                var angle1 = Math.PI / 2;
+                var angle2 = Math.PI / 2;
+                
+                var step, point1, point2;
+                for (step = Math.PI / 2; step > binarySearchDetail; step *= 0.5) {
+                    point1 = direction.times(Math.cos(angle1) * normalBranchDistance).plus(axis1.times(Math.sin(angle1) * normalBranchDistance));
+                    point2 = direction.times(Math.cos(angle2) * normalBranchDistance).plus(axis2.times(Math.sin(angle2) * normalBranchDistance));
+                    if (check(position.plus(point1))) {angle1 -= step;}
+                    else {angle1 += step;}
+                    if (check(position.plus(point2))) {angle2 -= step;}
+                    else {angle2 += step;}
+                }
+                
+                var normal = point1.cross(point2).unit();
+                
+                if (normal.dot(direction) < 0) return normal.times(-1);
+                return normal;
+            }
+            
+            function rayCast(position, direction) {
+                for (var distance = 0; distance < rayLength; distance += (1.0 / rayDetail)) {
+                    if (check(position.plus(direction.times(distance)))) {
+                        for (var step = 1.0 / rayDetail; step > binarySearchDetail; step *= 0.5) {
+                            if (check(position.plus(direction.times(distance)))) {distance -= step;}
+                            else {distance += step;}
+                        }
+                        return distance;
+                    }
+                }
+                return -1;
+            }
+            
+            function calculateRayColor(position, direction, deapth) {
+                var distance = rayCast(position, direction);
+                
+                if (distance > 0) {
+                    var hitPosition = position.plus(direction.times(distance));
+                    var normal = getNormal(hitPosition, direction);
+                    var reflection = direction.plus(normal.times(normal.dot(direction) * -2))
+                    
+                    var lightValue = new Vector(0, 0, 0);
+                    
+                    // Calculate lighting for each light in the scene
+                    for (var property in lights) {
+                        if (lights.hasOwnProperty(property)) {
+                            var lightVector = lights[property].position.minus(hitPosition);
+                            var lightDirection = lightVector.unit();
+                            
+                            // If shadows are enabled then make sure there's a clear line to the light
+                            if (shadows) {
+                                var distance = rayCast(hitPosition.plus(lightDirection.times(binarySearchDetail * 100)), lightDirection);
+                                if (distance != -1 && distance < lightVector.magnitude()) continue;
+                            }
+                            if (lightDirection.dot(normal) < 0) {
+                                // Calculate diffuse lighting
+                                lightValue = lightValue.plus(color(hitPosition).pairwiseTimes(lights[property].color).times(Math.abs(normal.dot(lightDirection))));
+                                
+                                // Calculate specular lighting
+                                lightValue = lightValue.plus(lights[property].color.times(specularAmount * Math.pow(reflection.dot(lightDirection), specular)))
+                            }
+                        }
+                    }
+                    
+                    // Calculate reflections
+                    if (deapth > 0) lightValue = lightValue.times(1 - relfectionStrength).plus(calculateRayColor(hitPosition.plus(reflection.times(binarySearchDetail * 100)), reflection, deapth - 1).times(relfectionStrength))
+                    
+                    return lightValue;
+                } else {return backgroundColor;}
+            }
+            
+            function render(look, eye, up) {
+                var imageData = []
+                
+                var lookDirection = (look.minus(eye)).unit();
+                var right = lookDirection.cross(up).unit();
+                var correctedUp = right.cross(lookDirection).unit();
+                
+                for (var y = 0; y < yResolution; y++){
+                    for (var x = 0; x < xResolution; x++){
+                        
+                        var xPosition = (x * 1.0 / (xResolution - 1)) * (cameraXStart - cameraXEnd) + cameraXEnd;
+                        var yPosition = (y * 1.0 / (yResolution - 1)) * (cameraYStart - cameraYEnd) + cameraYEnd;
+                        
+                        var position = eye.plus(lookDirection.times(cameraDistance)).plus(correctedUp.times(yPosition)).plus(right.times(xPosition));
+                        var direction = (position.minus(eye)).unit();
+
+                        imageData.push(calculateRayColor(position, direction, bounces));
+                    }
+                }
+                return imageData;
+            }
+            
+            function runNewSettings() {
+                // Create the dynamic scripts for the function, and the color of the object.
+                if (checkScript != null) document.body.removeChild(checkScript);
+                checkScript = document.createElement("script");
+                checkScript.type = "text/javascript";
+                checkScript.innerHTML = "function check(position) {" + document.getElementById("checkFunction").value + "}";
+                document.body.appendChild(checkScript);
+                
+                if (colorScript != null) document.body.removeChild(colorScript);
+                colorScript = document.createElement("script");
+                colorScript.type = "text/javascript";
+                colorScript.innerHTML = "function color(position) {" + document.getElementById("colorFunction").value + "}";
+                document.body.appendChild(colorScript);
+                
+                // Load all the user data into the correct variables
+                // Make sure all numeric data is in a number format, and not string. Javascript will take either but is much slower with strings.
+                rayLength = Number(document.getElementById("rayLength").value);
+                rayDetail = Number(document.getElementById("rayDetail").value);
+                
+                binarySearchDetail = Number(document.getElementById("binarySearchDetail").value);
+                normalBranchDistance = Number(document.getElementById("normalBranchDistance").value);
+                
+                cameraPosition = new Vector(Number(document.getElementById("cameraX").value), Number(document.getElementById("cameraY").value), Number(document.getElementById("cameraZ").value));
+                cameraLook = new Vector(Number(document.getElementById("lookX").value), Number(document.getElementById("lookY").value), Number(document.getElementById("lookZ").value));
+                cameraUp = new Vector(Number(document.getElementById("upX").value), Number(document.getElementById("upY").value), Number(document.getElementById("upZ").value));
+                
+                xResolution = Math.round(Number(document.getElementById("resolutionx").value));
+                yResolution = Math.round(Number(document.getElementById("resolutiony").value));
+                
+                cameraXStart = Number(document.getElementById("startx").value);
+                cameraYStart = Number(document.getElementById("starty").value);
+                cameraXEnd = Number(document.getElementById("endx").value);
+                cameraYEnd = Number(document.getElementById("endy").value);
+                cameraDistance = Number(document.getElementById("distance").value);
+                
+                backgroundColor = new Vector(Number(document.getElementById("backgroundr").value), Number(document.getElementById("backgroundg").value), Number(document.getElementById("backgroundb").value));
+                
+                specularAmount = Number(document.getElementById("specularamount").value);
+                specular = Number(document.getElementById("specular").value);
+                bounces = Math.round(Number(document.getElementById("reflectionbounces").value));
+                relfectionStrength = Number(document.getElementById("reflectionamount").value);
+                shadows = document.getElementById("shadows").checked;
+                
+                // Render it!
+                var data = render(cameraLook, cameraPosition, cameraUp);
+                
+                // Create the new image from the rendered data
+                var newImage = ctx.createImageData(xResolution, yResolution);
+                var newImageData = newImage.data;
+                
+                var index = 0;
+                for (var y = 0; y < yResolution; y++){
+                    for (var x = 0; x < xResolution; x++){
+                        newImageData[index * 4]     = Math.min(data[index].x * 255, 255);
+                        newImageData[index * 4 + 1] = Math.min(data[index].y * 255, 255);
+                        newImageData[index * 4 + 2] = Math.min(data[index].z * 255, 255);
+                        newImageData[index * 4 + 3] = 255;
+                        index++
+                    }
+                }
+                
+                // Add it to the canvas
+                canvas.width = xResolution;
+                canvas.height = yResolution;
+                ctx.putImageData(newImage, 0, 0);
+            }
+            
+            
+            
+            
+            // Web Interface Code
+            
+            // Add the first light
+            lights[0] = new Light(new Vector(0, 50, 0), new Vector(1, 1, 1), document.getElementById("light0"));
+            
+            
+            // Make the lights removable
+            function removeLight(number) {
+                lights[number].element.parentNode.removeChild(lights[number].element)
+                delete lights[number]
+            }
+            
+            function addLight() {
+                var position = new Vector(Number(document.getElementById("newlightx").value), Number(document.getElementById("newlighty").value), Number(document.getElementById("newlightz").value));
+                var color = new Vector(Number(document.getElementById("newlightr").value), Number(document.getElementById("newlightg").value), Number(document.getElementById("newlightb").value));
+                var parent = document.getElementById("lights");
+                var element = document.createElement("div");
+                element.setAttribute("class", "light");
+                element.innerHTML = "Position: " + position.x + ", " + position.y + ", " + position.z + " Color: " + color.x + ", " + color.y + ", " + color.z;
+                parent.appendChild(element);
+                var removeButton = document.createElement("input");
+                removeButton.setAttribute("type", "button");
+                removeButton.setAttribute("value", "Remove");
+                removeButton.setAttribute("onclick", "removeLight(" + currentLightId + ");");
+                element.appendChild(removeButton);
+                lights[currentLightId] = new Light(position, color, element)
+                currentLightId++;
+            }
+            
+            // Make the collapsible divs work
+            // Code reference: https://www.w3schools.com/howto/howto_js_collapsible.asp
+            var collapsibles = document.getElementsByClassName("collapsible");
+            var i;
+            for (i = 0; i < collapsibles.length; i++) {
+                collapsibles[i].addEventListener("click", function() {
+                    this.classList.toggle("active");
+                    var content = this.nextElementSibling;
+                    if (content.style.maxHeight){
+                        content.style.maxHeight = null;
+                    } else {
+                        content.style.maxHeight = content.scrollHeight + "px";
+                    } 
+                });
+            }
+
+        </script>
+
+    </body>
+</html>
